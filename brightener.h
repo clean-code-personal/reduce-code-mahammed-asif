@@ -6,6 +6,7 @@ class ImageBrightener {
         std::shared_ptr<Image> m_inputImage;
     public:
         ImageBrightener(std::shared_ptr<Image> inputImage);
-        int BrightenWholeImage();
-        bool AddBrighteningImage(std::shared_ptr<Image> imageToAdd, int& attenuatedCount);
+
+        bool BrightenWholeImage(int& attenuatedPixelCount) const;
+        bool AddBrighteningImage(const std::shared_ptr<const Image> imageToAdd, int& attenuatedCount) const;
 };

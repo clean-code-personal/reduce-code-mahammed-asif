@@ -1,42 +1,46 @@
 #include "brightener.h"
 
 ImageBrightener::ImageBrightener(std::shared_ptr<Image> inputImage): m_inputImage(inputImage) {
-}
-
-int ImageBrightener::BrightenWholeImage() {
-    // For brightening, we add a certain grayscale (25) to every pixel.
-    // While brightening, some pixels may cross the max brightness. They are
-    // called 'attenuated' pixels
-    int attenuatedPixelCount = 0;
-    for (int x = 0; x < m_inputImage->m_rows; x++) {
-        for (int y = 0; y < m_inputImage->m_columns; y++) {
-            if (m_inputImage->pixels[x * m_inputImage->m_columns + y] > (255 - 25)) {
-                ++attenuatedPixelCount;
-                m_inputImage->pixels[x * m_inputImage->m_columns + y] = 255;
-            } else {
-                int pixelIndex = x * m_inputImage->m_columns + y;
-                m_inputImage->pixels[pixelIndex] += 25;
-            }
-        }
+    if (inputImage == nullptr)
+    {
+        std::cout << "Invalid input image provided to ImageBrightener" << std::endl;
     }
-    return attenuatedPixelCount;
 }
 
-bool ImageBrightener::AddBrighteningImage(std::shared_ptr<Image> imageToAdd, int& attenuatedCount) {
+bool ImageBrightener::BrightenWholeImage(int& attenuatedPixelCount) const {
+
+    m_inputImage->pixelRunner([&attenuatedPixelCount](uint8_t pixelGrayscale, int x, int y) {
+        uint8_t outputGrayscale = pixelGrayscale;
+        if (outputGrayscale > (255 - 25)) {
+            ++attenuatedPixelCount;
+            outputGrayscale = 255;
+        }
+        else {
+            outputGrayscale += 25;
+        }
+
+        return outputGrayscale;
+        });
+    return true;
+}
+
+bool ImageBrightener::AddBrighteningImage(const std::shared_ptr<const Image> imageToAdd, int& attenuatedPixelCount) const {
     if (imageToAdd->m_rows != m_inputImage->m_rows || imageToAdd->m_columns != m_inputImage->m_columns) {
         return false;
     }
-    attenuatedCount = 0;
-    for (int x = 0; x < m_inputImage->m_rows; x++) {
-        for (int y = 0; y < m_inputImage->m_columns; y++) {
-            int pixelIndex = x * m_inputImage->m_columns + y;
-            if (int(m_inputImage->pixels[pixelIndex]) + imageToAdd->pixels[pixelIndex] > 255) {
-                ++attenuatedCount;
-                m_inputImage->pixels[pixelIndex] = 255;
-            } else {
-                imageToAdd->pixels[pixelIndex] += m_inputImage->pixels[pixelIndex];
-            }
+
+    m_inputImage->pixelRunner([imageToAdd , &attenuatedPixelCount](uint8_t pixelGrayscale, int x, int y) {
+        uint8_t outputGrayscale = pixelGrayscale;
+        int pixelIndex = x * imageToAdd->m_columns + y;
+        if ((outputGrayscale + imageToAdd->m_pixels[pixelIndex]) > 255) {
+            ++attenuatedPixelCount;
+            outputGrayscale = 255;
         }
-    }
+        else {
+            outputGrayscale += imageToAdd->m_pixels[pixelIndex];
+        }
+
+        return outputGrayscale;
+        });
     return true;
 }
