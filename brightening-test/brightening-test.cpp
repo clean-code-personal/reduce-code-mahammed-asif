@@ -36,6 +36,10 @@ namespace brighteningtest
             Assert::AreEqual(45, int(image->m_pixels[0])); // left-side pixel is unchanged
             Assert::AreEqual(80, int(image->m_pixels[1])); // right-side pixel is brightened
             Assert::AreEqual(0, attenuatedCount);
+
+			auto image2 = std::make_shared<Image>(3,2);
+			ImageBrightener brightener2(image2);
+			Assert::IsFalse(brightener2.AddBrighteningImage(brighteningImage, attenuatedCount));
 		}
 
 		std::shared_ptr<Image> CreateImage() const
